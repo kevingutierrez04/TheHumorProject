@@ -3,6 +3,8 @@ import { supabase } from '@/lib/supabaseClient'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import LogoutButton from './LogoutButton'
+import VoteButtons from './VoteButtons'
+import { getUserVotes, getVoteCounts } from './actions'
 
 const PAGE_SIZE = 21
 
@@ -51,6 +53,13 @@ export default async function CaptionsPage(props: {
   const captions = (data ?? []) as Caption[]
   const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE)
 
+  // Get user's votes and total vote counts for this page
+  const captionIds = captions.map((c) => c.id)
+  const [userVotes, voteCounts] = await Promise.all([
+    getUserVotes(captionIds),
+    getVoteCounts(captionIds),
+  ])
+
   return (
     <main style={{ padding: '2rem', maxWidth: '1100px', margin: '0 auto' }}>
       <div
@@ -66,7 +75,7 @@ export default async function CaptionsPage(props: {
             The Humor Project Assignment 3
           </h1>
           <p style={{ color: '#666', fontSize: '0.9rem' }}>
-            Logged in as {user.email}
+            kmg2226 | Logged in as {user.email}
           </p>
         </div>
         <LogoutButton />
@@ -101,15 +110,23 @@ export default async function CaptionsPage(props: {
               {caption.content ?? 'No caption text'}
             </p>
 
-            <p
-              style={{
-                marginTop: '1rem',
-                fontSize: '0.8rem',
-                color: '#bbb',
-              }}
-            >
-              {new Date(caption.created_datetime_utc).toLocaleDateString()}
-            </p>
+            <div>
+              <p
+                style={{
+                  marginTop: '1rem',
+                  fontSize: '0.8rem',
+                  color: '#bbb',
+                }}
+              >
+                {new Date(caption.created_datetime_utc).toLocaleDateString()}
+              </p>
+
+              <VoteButtons
+                captionId={caption.id}
+                initialVoteValue={userVotes[caption.id] ?? null}
+                initialNetVotes={voteCounts[caption.id] ?? 0}
+              />
+            </div>
           </div>
         ))}
       </div>
