@@ -72,13 +72,31 @@ export default async function CaptionsPage(props: {
       >
         <div>
           <h1 style={{ marginBottom: '0.5rem' }}>
-            The Humor Project Assignment 3
+            The Humor Project Assignment 5
           </h1>
           <p style={{ color: '#666', fontSize: '0.9rem' }}>
             kmg2226 | Logged in as {user.email}
           </p>
         </div>
-        <LogoutButton />
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <Link
+            href="/upload"
+            style={{
+              background: '#22D3EE',
+              color: '#000',
+              padding: '0.5rem 1.5rem',
+              borderRadius: '8px',
+              border: 'none',
+              fontSize: '0.9rem',
+              fontWeight: 'bold',
+              textDecoration: 'none',
+              display: 'inline-block',
+            }}
+          >
+            📤 Upload Image
+          </Link>
+          <LogoutButton />
+        </div>
       </div>
 
       {/* Grid */}

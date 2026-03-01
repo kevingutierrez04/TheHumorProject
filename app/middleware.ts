@@ -35,7 +35,10 @@ export async function middleware(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   // Redirect to login if not authenticated and trying to access protected route
-  if (!user && request.nextUrl.pathname === '/') {
+  if (
+    !user &&
+    (request.nextUrl.pathname === '/' || request.nextUrl.pathname === '/upload')
+  ) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
@@ -54,6 +57,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/',
+    '/upload',
     '/login',
     '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
