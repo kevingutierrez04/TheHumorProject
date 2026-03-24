@@ -22,8 +22,6 @@ export async function submitVote(captionId: string, voteValue: number) {
     .eq('profile_id', user.id)
     .single()
 
-  const now = new Date().toISOString()
-
   if (existingVote) {
     // If clicking the same vote, remove it (toggle off)
     if (existingVote.vote_value === voteValue) {
@@ -43,7 +41,7 @@ export async function submitVote(captionId: string, voteValue: number) {
         .from('caption_votes')
         .update({
           vote_value: voteValue,
-          modified_datetime_utc: now,
+          modified_by_user_id: user.id,
         })
         .eq('id', existingVote.id)
 
@@ -60,8 +58,8 @@ export async function submitVote(captionId: string, voteValue: number) {
     caption_id: captionId,
     profile_id: user.id,
     vote_value: voteValue,
-    created_datetime_utc: now,
-    modified_datetime_utc: now,
+    created_by_user_id: user.id,
+    modified_by_user_id: user.id,
   })
 
   if (error) {
