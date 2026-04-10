@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import LogoutButton from './LogoutButton'
 import VoteButtons from './VoteButtons'
+import OnboardingBanner from './OnboardingBanner'
 import { getUserVotes, getVoteCounts } from './actions'
 
 const PAGE_SIZE = 21
@@ -12,6 +13,8 @@ type Caption = {
   id: string
   content: string | null
   created_datetime_utc: string
+  image_id: string | null
+  imageUrl?: string
 }
 
 export default async function CaptionsPage(props: {
@@ -36,7 +39,7 @@ export default async function CaptionsPage(props: {
   // Fetch captions
   const { data, error } = await supabase
     .from('captions')
-    .select('id, content, created_datetime_utc')
+    .select('id, content, created_datetime_utc, image_id')
     .order('created_datetime_utc', { ascending: false })
     .range(from, to)
 
@@ -53,6 +56,15 @@ export default async function CaptionsPage(props: {
   const captions = (data ?? []) as Caption[]
   const totalPages = Math.ceil((count ?? 0) / PAGE_SIZE)
 
+  // Fetch image URLs for this page's captions
+  const imageIds = [...new Set(captions.map((c) => c.image_id).filter(Boolean))] as string[]
+  const { data: imageData } = imageIds.length
+    ? await supabase.from('images').select('id, url').in('id', imageIds)
+    : { data: [] }
+  const imageUrlMap: Record<string, string> = {}
+  imageData?.forEach((img) => { imageUrlMap[img.id] = img.url })
+  captions.forEach((c) => { if (c.image_id) c.imageUrl = imageUrlMap[c.image_id] })
+
   // Get user's votes and total vote counts for this page
   const captionIds = captions.map((c) => c.id)
   const [userVotes, voteCounts] = await Promise.all([
@@ -67,18 +79,12 @@ export default async function CaptionsPage(props: {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '2rem',
+          marginBottom: '1.5rem',
         }}
       >
-        <div>
-          <h1 style={{ marginBottom: '0.5rem' }}>
-            The Humor Project Assignment 5
-          </h1>
-          <p style={{ color: '#666', fontSize: '0.9rem' }}>
-            kmg2226 | Logged in as {user.email}
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <h1 style={{ margin: 0 }}>The Humor Project</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <span style={{ color: '#666', fontSize: '0.8rem' }}>{user.email}</span>
           <Link
             href="/upload"
             style={{
@@ -99,6 +105,8 @@ export default async function CaptionsPage(props: {
         </div>
       </div>
 
+      <OnboardingBanner />
+
       {/* Grid */}
       <div
         style={{
@@ -114,8 +122,7 @@ export default async function CaptionsPage(props: {
               background: '#000',
               color: '#fff',
               borderRadius: '12px',
-              padding: '1.25rem',
-              minHeight: '140px',
+              overflow: 'hidden',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
@@ -124,21 +131,22 @@ export default async function CaptionsPage(props: {
               borderStyle: 'solid',
             }}
           >
-            <p style={{ lineHeight: 1.6 }}>
-              {caption.content ?? 'No caption text'}
-            </p>
-
-            <div>
-              <p
+            {caption.imageUrl && (
+              <img
+                src={caption.imageUrl}
+                alt="Caption source"
                 style={{
-                  marginTop: '1rem',
-                  fontSize: '0.8rem',
-                  color: '#bbb',
+                  width: '100%',
+                  height: '160px',
+                  objectFit: 'cover',
+                  display: 'block',
                 }}
-              >
-                {new Date(caption.created_datetime_utc).toLocaleDateString()}
+              />
+            )}
+            <div style={{ padding: '1.25rem', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+              <p style={{ lineHeight: 1.6, marginBottom: '0.75rem' }}>
+                {caption.content ?? 'No caption text'}
               </p>
-
               <VoteButtons
                 captionId={caption.id}
                 initialVoteValue={userVotes[caption.id] ?? null}
@@ -155,21 +163,47 @@ export default async function CaptionsPage(props: {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginTop: '2rem',
+          marginTop: '2.5rem',
         }}
       >
         {currentPage > 1 ? (
-          <Link href={`/?page=${currentPage - 1}`}>← Previous</Link>
+          <Link
+            href={`/?page=${currentPage - 1}`}
+            style={{
+              background: '#22D3EE',
+              color: '#000',
+              padding: '0.6rem 1.5rem',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              textDecoration: 'none',
+              fontSize: '0.95rem',
+            }}
+          >
+            ← Previous
+          </Link>
         ) : (
           <div />
         )}
 
-        <div>
+        <div style={{ color: '#888', fontSize: '0.9rem' }}>
           Page {currentPage} of {totalPages}
         </div>
 
         {currentPage < totalPages ? (
-          <Link href={`/?page=${currentPage + 1}`}>Next →</Link>
+          <Link
+            href={`/?page=${currentPage + 1}`}
+            style={{
+              background: '#22D3EE',
+              color: '#000',
+              padding: '0.6rem 1.5rem',
+              borderRadius: '8px',
+              fontWeight: 'bold',
+              textDecoration: 'none',
+              fontSize: '0.95rem',
+            }}
+          >
+            Next →
+          </Link>
         ) : (
           <div />
         )}

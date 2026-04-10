@@ -19,6 +19,7 @@ export default function VoteButtons({
     initialVoteValue
   )
   const [netVotes, setNetVotes] = useState(initialNetVotes)
+  const [confirmedVote, setConfirmedVote] = useState<number | null>(null)
 
   const handleVote = (voteValue: number) => {
     // Optimistic update
@@ -45,6 +46,10 @@ export default function VoteButtons({
     setCurrentVote(newVote)
     setNetVotes(newNetVotes)
 
+    // Brief confirmation flash
+    setConfirmedVote(voteValue)
+    setTimeout(() => setConfirmedVote(null), 700)
+
     // Submit to server
     startTransition(async () => {
       const result = await submitVote(captionId, voteValue)
@@ -70,16 +75,18 @@ export default function VoteButtons({
         onClick={() => handleVote(1)}
         disabled={isPending}
         style={{
-          background: currentVote === 1 ? '#22D3EE' : 'transparent',
+          background: confirmedVote === 1 ? '#7EE8F8' : currentVote === 1 ? '#22D3EE' : 'transparent',
           color: currentVote === 1 ? '#000' : '#22D3EE',
           border: '2px solid #22D3EE',
-          borderRadius: '6px',
-          padding: '0.4rem 0.75rem',
+          borderRadius: '8px',
+          padding: '0.55rem 1rem',
           cursor: isPending ? 'not-allowed' : 'pointer',
-          fontSize: '0.9rem',
+          fontSize: '1rem',
           fontWeight: 'bold',
           opacity: isPending ? 0.5 : 1,
-          transition: 'all 0.2s',
+          transition: 'all 0.15s',
+          minWidth: '44px',
+          minHeight: '44px',
         }}
       >
         ↑ Upvote
@@ -89,8 +96,9 @@ export default function VoteButtons({
         style={{
           color: netVotes > 0 ? '#22D3EE' : netVotes < 0 ? '#EF4444' : '#888',
           fontWeight: 'bold',
-          minWidth: '2rem',
+          minWidth: '2.5rem',
           textAlign: 'center',
+          fontSize: '1rem',
         }}
       >
         {netVotes > 0 ? '+' : ''}
@@ -101,16 +109,18 @@ export default function VoteButtons({
         onClick={() => handleVote(-1)}
         disabled={isPending}
         style={{
-          background: currentVote === -1 ? '#EF4444' : 'transparent',
+          background: confirmedVote === -1 ? '#F87171' : currentVote === -1 ? '#EF4444' : 'transparent',
           color: currentVote === -1 ? '#fff' : '#EF4444',
           border: '2px solid #EF4444',
-          borderRadius: '6px',
-          padding: '0.4rem 0.75rem',
+          borderRadius: '8px',
+          padding: '0.55rem 1rem',
           cursor: isPending ? 'not-allowed' : 'pointer',
-          fontSize: '0.9rem',
+          fontSize: '1rem',
           fontWeight: 'bold',
           opacity: isPending ? 0.5 : 1,
-          transition: 'all 0.2s',
+          transition: 'all 0.15s',
+          minWidth: '44px',
+          minHeight: '44px',
         }}
       >
         ↓ Downvote
